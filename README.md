@@ -6,7 +6,9 @@ Security is ensured by a multi-pass AES encryption method, the key to decrypt th
 Reliability is ensured by RAID 1 and series of checksums using SHA256, user data is stored in a few microSD cards that are acccessed via RAID1 to ensure reliability with an option to create an external backup. 
 
 ## Dev setup
-
+pi pico connected via usb to a computer
+IDE: Thonny
+Microsd to SPI module connected to pi pico's spi port
 
 ### TODO
 [ ] fix encrypt_loop for data with more than 32 letters
