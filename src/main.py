@@ -7,7 +7,6 @@ MicroPython v1.22.1 on 2024-01-05; Raspberry Pi Pico with RP2040
 """
 
 
-# Main menu
 def open_menu():
     print()
     menu_selection = input("Menu:\n" +
@@ -17,10 +16,47 @@ def open_menu():
     if (menu_selection == "1"):
         update_password()
     elif (menu_selection == "2"):
-        print(" is 2")
+        add_item()
+    elif (menu_selection == "3"):
+        retrieve_item()
     else:
         print("select")
         open_menu()
+        
+def add_item():
+    password = input('Input Credentials: ')
+    password_coded = read_sdcard(".key")
+    auth = verify_password(password, password_coded)
+    if (auth == True):
+        item_name = input("Name of the item: ")
+        item_creds = input("Item Credentials: ")
+        item_creds_enc = encrypt(item_creds, hash_(password))
+        write_sdcard("item_"+item_name, item_creds_enc)
+        add_checksum("item_"+item_name)
+        read_file = check_checksum("item_"+item_name)
+        print("Item successfully added!")
+        open_menu()
+    else:
+        print()
+        print("ERROR: Wrong Credentials")
+        open_menu()
+
+def retrieve_item():
+    password = input('Input Credentials: ')
+    password_coded = read_sdcard(".key")
+    auth = verify_password(password, password_coded)
+    if (auth == True):
+        item_name = input("Name of the item: ")
+        read_file = check_checksum("item_"+item_name)
+        creds = decrypt(read_file, hash_(password))
+        print("Credentials: ")
+        print(creds)
+        open_menu()
+    else:
+        print()
+        print("ERROR: Wrong Credentials")
+        open_menu()
+
 
 def test_microsd():
     # Create a file and write something to it
@@ -31,25 +67,22 @@ def test_microsd():
     with open("/sd/.config", "rb", encoding='iso-8859-15') as file:
         data = file.read()
     if data == b'tests&\x07C\xfcP\xfe;d+4\xaez\t\xcbs\xc9\xe7]\xaf\xabg\xa8\x00/':
-        # run some more tests
+        return 1
         write_sdcard("testing_checksum", hash_("encrypted"))
         add_checksum("testing_checksum")
         read_file = check_checksum("testing_checksum")
-        return 1
     else:
         print(data)
         print("ERROR: Fatal Error: microsd card is not functional")
         #time.sleep(10)
         machine.soft_reset()
 
-# read from a file into a string
 def read_sdcard(filename):
     path = "/sd/" + filename
     with open(path, "rb") as file:
         data = file.read()
         return data
 
-# write a file from a string
 def write_sdcard(filename, data):
     path = "/sd/" + filename
     with open(path, "w") as file:
@@ -58,7 +91,6 @@ def write_sdcard(filename, data):
 def check_hash_integrity():
     pass
 
-# AES 256 bit 
 def encrypt(plaintext, key):
     BLOCK_SIZE = 32
     cipher = aes(key, 1)
@@ -246,6 +278,7 @@ auth = verify_password(password, password_coded)
 #print("Input Credentials: ", end="")
 #password = sys.stdin.readline()
 #password = "asdasd"
+#password_saved = b'&\x07C\xfcP\xfe;d+4\xaez\t\xcbs\xc9\xe7]\xaf\xabg\xa8\x00/\x1f\xa3g\x91\xca\xd1\xb37'
 #print(len(password_saved))
 #password_hash = hashlib.sha256(str(password)).digest()
 if (auth == True):
@@ -258,6 +291,8 @@ else:
     print()
     print("ERROR: Wrong Credentials")
     machine.soft_reset()
+
+
 
 
 
